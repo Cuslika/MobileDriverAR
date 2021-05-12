@@ -9,9 +9,9 @@ public class InputManager : Singleton<InputManager>
     private CarController carController;
 
     [SerializeField]
-    private Manager gameManager;
+    private GameManager gameManager;
 
-    private bool accelerate, reverse, left, right, carReset;
+    private bool accelerate, reverse, left, right, carReset, up, down, rotateLeft, rotateRight;
 
     public void Bind(CarController carController)
     {
@@ -30,6 +30,15 @@ public class InputManager : Singleton<InputManager>
             carController.TurnRight();
         if (carReset)
             carController.Reset();
+
+        if (up)
+            gameManager.MoveObjectUp();
+        if (down)
+            gameManager.MoveObjectDown();
+        if (rotateLeft)
+            gameManager.RotateObjectLeft();
+        if (rotateRight)
+            gameManager.RotateObjectRight();
     }
 
     public void OnAccelerate(InputValue inputValue)
@@ -51,6 +60,29 @@ public class InputManager : Singleton<InputManager>
     public void OnResetCar(InputValue inputValue)
     {
         carReset = inputValue.isPressed;
+    }
+
+    public void OnUp(InputValue inputValue)
+    {
+        Logger.Instance.LogInfo("On Object Up");
+        up = inputValue.isPressed;
+    }
+    public void OnDown(InputValue inputValue)
+    {
+        Logger.Instance.LogInfo("On Object Down");
+        down = inputValue.isPressed;
+    }
+
+    public void OnRotateLeft(InputValue inputValue)
+    {
+        Logger.Instance.LogInfo("On Object RLeft");
+        rotateLeft = inputValue.isPressed;
+    }
+
+    public void OnRotateRight(InputValue inputValue)
+    {
+        Logger.Instance.LogInfo("On Object RRight");
+        rotateRight = inputValue.isPressed;
     }
 
 }

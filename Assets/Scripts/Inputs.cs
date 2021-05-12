@@ -57,6 +57,38 @@ public class @Inputs : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Up"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""3aeb0f05-23fc-4fb0-80b2-3d61219b96b7"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""Down"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""6902f22f-d0c3-45ed-8158-11dc7222be1e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""RotateLeft"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""f493250b-a904-4e82-b283-960e5dda95c8"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""RotateRight"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""f3433edd-4eae-4e5c-b340-d00cf76861ae"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -114,6 +146,50 @@ public class @Inputs : IInputActionCollection, IDisposable
                     ""action"": ""ResetCar"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e73ddde6-dc12-4fbf-9233-6374857bd170"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5a9623af-5b1d-4557-9b21-48f235c16601"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3b9ec6af-6f04-4162-9dc5-29d61c1e0f91"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RotateLeft"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e33ec239-4871-4358-83dc-8b4e52280627"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RotateRight"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -127,6 +203,10 @@ public class @Inputs : IInputActionCollection, IDisposable
         m_Drive_TurnLeft = m_Drive.FindAction("TurnLeft", throwIfNotFound: true);
         m_Drive_TurnRight = m_Drive.FindAction("TurnRight", throwIfNotFound: true);
         m_Drive_ResetCar = m_Drive.FindAction("ResetCar", throwIfNotFound: true);
+        m_Drive_Up = m_Drive.FindAction("Up", throwIfNotFound: true);
+        m_Drive_Down = m_Drive.FindAction("Down", throwIfNotFound: true);
+        m_Drive_RotateLeft = m_Drive.FindAction("RotateLeft", throwIfNotFound: true);
+        m_Drive_RotateRight = m_Drive.FindAction("RotateRight", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -181,6 +261,10 @@ public class @Inputs : IInputActionCollection, IDisposable
     private readonly InputAction m_Drive_TurnLeft;
     private readonly InputAction m_Drive_TurnRight;
     private readonly InputAction m_Drive_ResetCar;
+    private readonly InputAction m_Drive_Up;
+    private readonly InputAction m_Drive_Down;
+    private readonly InputAction m_Drive_RotateLeft;
+    private readonly InputAction m_Drive_RotateRight;
     public struct DriveActions
     {
         private @Inputs m_Wrapper;
@@ -190,6 +274,10 @@ public class @Inputs : IInputActionCollection, IDisposable
         public InputAction @TurnLeft => m_Wrapper.m_Drive_TurnLeft;
         public InputAction @TurnRight => m_Wrapper.m_Drive_TurnRight;
         public InputAction @ResetCar => m_Wrapper.m_Drive_ResetCar;
+        public InputAction @Up => m_Wrapper.m_Drive_Up;
+        public InputAction @Down => m_Wrapper.m_Drive_Down;
+        public InputAction @RotateLeft => m_Wrapper.m_Drive_RotateLeft;
+        public InputAction @RotateRight => m_Wrapper.m_Drive_RotateRight;
         public InputActionMap Get() { return m_Wrapper.m_Drive; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -214,6 +302,18 @@ public class @Inputs : IInputActionCollection, IDisposable
                 @ResetCar.started -= m_Wrapper.m_DriveActionsCallbackInterface.OnResetCar;
                 @ResetCar.performed -= m_Wrapper.m_DriveActionsCallbackInterface.OnResetCar;
                 @ResetCar.canceled -= m_Wrapper.m_DriveActionsCallbackInterface.OnResetCar;
+                @Up.started -= m_Wrapper.m_DriveActionsCallbackInterface.OnUp;
+                @Up.performed -= m_Wrapper.m_DriveActionsCallbackInterface.OnUp;
+                @Up.canceled -= m_Wrapper.m_DriveActionsCallbackInterface.OnUp;
+                @Down.started -= m_Wrapper.m_DriveActionsCallbackInterface.OnDown;
+                @Down.performed -= m_Wrapper.m_DriveActionsCallbackInterface.OnDown;
+                @Down.canceled -= m_Wrapper.m_DriveActionsCallbackInterface.OnDown;
+                @RotateLeft.started -= m_Wrapper.m_DriveActionsCallbackInterface.OnRotateLeft;
+                @RotateLeft.performed -= m_Wrapper.m_DriveActionsCallbackInterface.OnRotateLeft;
+                @RotateLeft.canceled -= m_Wrapper.m_DriveActionsCallbackInterface.OnRotateLeft;
+                @RotateRight.started -= m_Wrapper.m_DriveActionsCallbackInterface.OnRotateRight;
+                @RotateRight.performed -= m_Wrapper.m_DriveActionsCallbackInterface.OnRotateRight;
+                @RotateRight.canceled -= m_Wrapper.m_DriveActionsCallbackInterface.OnRotateRight;
             }
             m_Wrapper.m_DriveActionsCallbackInterface = instance;
             if (instance != null)
@@ -233,6 +333,18 @@ public class @Inputs : IInputActionCollection, IDisposable
                 @ResetCar.started += instance.OnResetCar;
                 @ResetCar.performed += instance.OnResetCar;
                 @ResetCar.canceled += instance.OnResetCar;
+                @Up.started += instance.OnUp;
+                @Up.performed += instance.OnUp;
+                @Up.canceled += instance.OnUp;
+                @Down.started += instance.OnDown;
+                @Down.performed += instance.OnDown;
+                @Down.canceled += instance.OnDown;
+                @RotateLeft.started += instance.OnRotateLeft;
+                @RotateLeft.performed += instance.OnRotateLeft;
+                @RotateLeft.canceled += instance.OnRotateLeft;
+                @RotateRight.started += instance.OnRotateRight;
+                @RotateRight.performed += instance.OnRotateRight;
+                @RotateRight.canceled += instance.OnRotateRight;
             }
         }
     }
@@ -244,5 +356,9 @@ public class @Inputs : IInputActionCollection, IDisposable
         void OnTurnLeft(InputAction.CallbackContext context);
         void OnTurnRight(InputAction.CallbackContext context);
         void OnResetCar(InputAction.CallbackContext context);
+        void OnUp(InputAction.CallbackContext context);
+        void OnDown(InputAction.CallbackContext context);
+        void OnRotateLeft(InputAction.CallbackContext context);
+        void OnRotateRight(InputAction.CallbackContext context);
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.EnhancedTouch;
@@ -6,28 +8,35 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private GameObject carPrefab, rampPrefab, boxPrefab;
+    [SerializeField] private GameObject carPrefab, rampPrefab, boxPrefab, gasCanPrefab;
 
     [SerializeField] private GameObject placementIndicator;
 
-    [SerializeField] private Material redIndicatorMaterial, blueIndicatorMaterial, greenIndicatorMaterial;
+    [SerializeField] private Material redIndicatorMaterial, blueIndicatorMaterial, greenIndicatorMaterial, selectionMaterial;
 
-    [SerializeField] private GameObject carControllers, uiSelectionWindow;
+    private Material baseMaterial;
 
-    [SerializeField] private Button addNewItemButton, placeDownButton, indicatorButton, closeButton, rampButton, boxButton, carButton;
+    [SerializeField] private GameObject carControllers, objectControllers, uiSelectionWindow, placingButtons, missionTracker, winnerScreen;
+
+    [SerializeField] private Text collectedText, remainingText;
+
+    [SerializeField] private Button addNewItemButton, placeDownButton, indicatorButton, closeButton, rampButton, boxButton, carButton, missionObjectButton, selectButton, deleteObjectButton, moveUpButton, moveDownButton, rotateLeftButton, rotateRightButton, continueButton;
 
     private ARRaycastManager rayCastMgr;
+
+    private bool isCarPlaced, isMissionItemSelected, selectionState, allMissionItemsPlaced, isCarSelected = true, indicatorState = true;
+
+    private GameObject car, currentPrefab, selectedObject;
+
+    private CarController carController;
     
-    private bool isCarPlaced, isCarSelected, indicatorState = true;
-
-    private GameObject car, currentPrefab;
-
-    private List<GameObject> placedObjects;
-
     private Rigidbody carRigidbody;
+
+    private int placedMissionObjects = 0;
 
     private void Start()
     {
@@ -36,18 +45,27 @@ public class GameManager : MonoBehaviour
         placementIndicator.SetActive(false);
         carControllers.SetActive(false);
         uiSelectionWindow.SetActive(false);
+        objectControllers.SetActive(false);
+        missionTracker.SetActive(false);
+        winnerScreen.SetActive(true);
 
+        deleteObjectButton.gameObject.SetActive(false);
+
+        selectButton.enabled = false;
+        selectButton.onClick.AddListener(SelectState);
         addNewItemButton.onClick.AddListener(ChooseNewItem);
         placeDownButton.onClick.AddListener(PlacePrefab);
         indicatorButton.onClick.AddListener(IndicatorStateChanged);
         closeButton.onClick.AddListener(Close);
-
+        deleteObjectButton.onClick.AddListener(DeleteObject);
+        continueButton.onClick.AddListener(Continue);
+        
         rampButton.onClick.AddListener(RampSelected);
         boxButton.onClick.AddListener(BoxSelected);
         carButton.onClick.AddListener(CarSelected);
+        missionObjectButton.onClick.AddListener(GasSelected);
 
         currentPrefab = carPrefab;
-        isCarSelected = true;
     }
 
     private void Awake()
@@ -62,18 +80,36 @@ public class GameManager : MonoBehaviour
 
         if (isCarPlaced && carRigidbody.position.y < car.transform.position.y - 3.0)
         {
-            Destroy(car);
-            isCarPlaced = false;
+            carController.Reset();
         }
+
+        if (selectionState)
+        {
+            SelectingObject();
+        }
+
+        if (allMissionItemsPlaced)
+        {
+            missionObjectButton.enabled = false;
+            UpdateText();
+        }
+
+        if (carController.collectedMissionObjects == 4)
+        {
+            missionTracker.SetActive(false);
+            winnerScreen.SetActive(true);
+        }
+
     }
 
     private void PlacePrefab()
     {
+        Logger.Instance.LogInfo("PlaceDown pressed");
         if (isCarSelected)
         {
             car = Instantiate(currentPrefab, placementIndicator.transform.position, placementIndicator.transform.rotation);
             carRigidbody = car.GetComponentInChildren<Rigidbody>();
-            CarController carController = car.GetComponentInChildren<CarController>();
+            carController = car.GetComponentInChildren<CarController>();
             InputManager.Instance.Bind(carController);
 
             isCarPlaced = true;
@@ -85,36 +121,33 @@ public class GameManager : MonoBehaviour
             placeDownButton.enabled = false;
 
             carButton.enabled = false;
-        }
-
-        GameObject newGameObject = Instantiate(currentPrefab, placementIndicator.transform.position, placementIndicator.transform.rotation);
-        placedObjects.Add(newGameObject);
-    }
-
-    /*private void PlaceSelectedPrefab(GameObject prefab)
-    {
-        var activeTouches = Touch.activeTouches;
-
-        if (activeTouches.Count > 0)
+        } 
+        else if (isMissionItemSelected)
         {
-            var touch = activeTouches[0];
-
-            bool isOverUi = EventSystem.current.IsPointerOverGameObject();
-            Logger.Instance.LogInfo($"Over UI: {isOverUi}");
-
-            if (!isOverUi && touch.phase == UnityEngine.InputSystem.TouchPhase.Began)
+            if (placedMissionObjects <= 4 && !allMissionItemsPlaced)
             {
-                car = Instantiate(carPrefab, placementIndicator.transform.position, placementIndicator.transform.rotation);
-                carRigidbody = car.GetComponentInChildren<Rigidbody>();
-                CarController carController = car.GetComponentInChildren<CarController>();
-                InputManager.Instance.Bind(carController);
-
-                isCarPlaced = true;
-                placementIndicator.SetActive(false);
+                GameObject newMissionGameObject = Instantiate(currentPrefab, placementIndicator.transform.position,
+                    placementIndicator.transform.rotation);
+                placedMissionObjects++;
+                if (placedMissionObjects == 4)
+                    allMissionItemsPlaced = true;
             }
         }
-    }*/
+        else
+        {
+            GameObject newGameObject = Instantiate(currentPrefab, placementIndicator.transform.position, placementIndicator.transform.rotation);
+        }
 
+        selectButton.enabled = true;
+    }
+
+    private void UpdateText()
+    {
+        missionTracker.SetActive(true);
+        collectedText.text = "Collected items: " + carController.collectedMissionObjects;
+        remainingText.text = "Remaining items: " + (placedMissionObjects - carController.collectedMissionObjects);
+    }
+    
     private void UpdatePlacementIndicator()
     {
         var hits = new List<ARRaycastHit>();
@@ -129,9 +162,81 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void SelectState()
+    {
+        SelectionState();
+    }
+
+    private void SelectionState()
+    {
+        selectionState = !selectionState;
+        indicatorState = !selectionState;
+
+        placementIndicator.SetActive(!selectionState);
+        placingButtons.SetActive(!selectionState);
+        if(car != null)
+            carControllers.SetActive(!selectionState);
+
+        deleteObjectButton.gameObject.SetActive(selectionState);
+        objectControllers.SetActive(selectionState);
+
+        if (selectedObject != null)
+            selectedObject.GetComponentInChildren<MeshRenderer>().material = baseMaterial;
+    }
+
+    private void Continue()
+    {
+        missionObjectButton.enabled = true;
+        placedMissionObjects = 0;
+        carController.collectedMissionObjects = 0;
+        allMissionItemsPlaced = false;
+        winnerScreen.SetActive(false);
+    }
+
+    private void SelectingObject()
+    {
+        var activeTouches = Touch.activeTouches;
+
+        if (activeTouches.Count > 0)
+        {
+            var touch = activeTouches[0];
+
+            if (touch.phase == TouchPhase.Began && !EventSystem.current.IsPointerOverGameObject())
+            {
+                if (selectedObject != null)
+                    selectedObject.GetComponentInChildren<MeshRenderer>().material = baseMaterial;
+
+                Logger.Instance.LogInfo("Touching began");
+                Ray raycast = Camera.main.ScreenPointToRay(touch.screenPosition);
+                RaycastHit raycastHit;
+
+                if (Physics.Raycast(raycast, out raycastHit))
+                {
+                    selectedObject = raycastHit.collider.gameObject;
+                    if (selectedObject.gameObject.CompareTag("PlacedObject") || selectedObject.gameObject.CompareTag("MissionObject"))
+                    {
+                        Logger.Instance.LogInfo(selectedObject.gameObject.tag);
+                        baseMaterial = selectedObject.GetComponentInChildren<MeshRenderer>().material;
+                        selectedObject.GetComponentInChildren<MeshRenderer>().material = selectionMaterial;
+                    }
+                    else
+                    {
+                        selectedObject = null;
+                    }
+                }
+            }
+        }
+    }
+
+    private void DeleteObject()
+    {
+        Destroy(selectedObject);
+    }
+    
     private void ChooseNewItem()
     {
-        Logger.Instance.LogInfo((car == null).ToString());
+        if(selectionState)
+            SelectionState();
         addNewItemButton.enabled = false;
         uiSelectionWindow.SetActive(true);
         placeDownButton.enabled = false;
@@ -153,15 +258,27 @@ public class GameManager : MonoBehaviour
         placementIndicator.SetActive(true);
         indicatorState = true;
         isCarSelected = false;
+        isMissionItemSelected = false;
     }
 
     private void BoxSelected()
     {
         currentPrefab = boxPrefab;
+        placementIndicator.GetComponent<MeshRenderer>().material = greenIndicatorMaterial;
+        placementIndicator.SetActive(true);
+        indicatorState = true;
+        isCarSelected = false;
+        isMissionItemSelected = false;
+    }
+
+    private void GasSelected()
+    {
+        currentPrefab = gasCanPrefab;
         placementIndicator.GetComponent<MeshRenderer>().material = redIndicatorMaterial;
         placementIndicator.SetActive(true);
         indicatorState = true;
         isCarSelected = false;
+        isMissionItemSelected = true;
     }
 
     private void CarSelected()
@@ -171,6 +288,7 @@ public class GameManager : MonoBehaviour
         placementIndicator.SetActive(true);
         indicatorState = true;
         isCarSelected = true;
+        isMissionItemSelected = false;
     }
 
     private void IndicatorStateChanged()
@@ -178,5 +296,33 @@ public class GameManager : MonoBehaviour
         indicatorState = !indicatorState;
         if(!indicatorState)
             placementIndicator.SetActive(false);
+    }
+
+    public void MoveObjectUp()
+    {
+        Logger.Instance.LogInfo("Moving Object Up");
+        if(selectedObject != null)
+            selectedObject.transform.position += new Vector3(0f, 0.05f, 0f);
+    }
+
+    public void MoveObjectDown()
+    {
+        Logger.Instance.LogInfo("Moving Object Down");
+        if (selectedObject != null)
+            selectedObject.transform.position += new Vector3(0f, -0.05f, 0f);
+    }
+
+    public void RotateObjectLeft()
+    {
+        Logger.Instance.LogInfo("Rotating Object Left");
+        if (selectedObject != null)
+            selectedObject.transform.Rotate(0f, 2f, 0f);
+    }
+
+    public void RotateObjectRight()
+    {
+        Logger.Instance.LogInfo("Moving Object Right");
+        if (selectedObject != null)
+            selectedObject.transform.Rotate(0f, -2f, 0f);
     }
 }

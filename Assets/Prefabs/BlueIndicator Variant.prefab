@@ -57,7 +57,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7829399841372121346, guid: fb0008e3a3e1d30478ef01ab87860adc, type: 3}
       propertyPath: m_Name
-      value: BlueIndicator
+      value: BlueIndicator Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 7829399841372121346, guid: fb0008e3a3e1d30478ef01ab87860adc, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fb0008e3a3e1d30478ef01ab87860adc, type: 3}

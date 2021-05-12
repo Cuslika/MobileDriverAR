@@ -24,6 +24,8 @@ public class CarController : MonoBehaviour
 
     private Vector3 startingPosition = Vector3.zero;
     private Quaternion startingRotation;
+
+    public int collectedMissionObjects = 0;
     
     void Awake()
     {
@@ -85,5 +87,14 @@ public class CarController : MonoBehaviour
     {
         carRigidbody.position = startingPosition;
         carRigidbody.rotation = startingRotation;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("MissionObject"))
+        {
+            Destroy(other.gameObject.transform.parent.gameObject);
+            collectedMissionObjects++;
+        }
     }
 }
